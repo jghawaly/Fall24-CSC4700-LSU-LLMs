@@ -8,7 +8,6 @@ import time
 # load environmental variables
 load_dotenv('../.env')
 
-
 roman_emperors = [
     "Augustus", "Tiberius", "Caligula", "Claudius", "Nero", "Galba", "Otho", "Vitellius", "Vespasian",
     "Titus", "Domitian", "Nerva", "Trajan", "Hadrian", "Antoninus Pius", "Marcus Aurelius", "Commodus",
@@ -32,17 +31,23 @@ roman_emperors = [
     "John VIII Palaiologos", "Constantine XI Palaiologos"
 ]
 
-
+# System and user prompt to be filled in
 system_prompt = "You are an expert in Roman history. Your job is to generate a short (150 words maximum) bio for a Roman emperor."
-user_prompt = "The emperor you should consider is {emperor_name}"
+user_prompt = 'The emperor you should consider is {emperor_name}. Return your response in json, with one key, being "response"'
 
+# this list will hold the individual tasks for each sample
 tasks = []
 for emperor in roman_emperors:
+    # created our messages list. The system prompt has not custom fields, but the user prompt has to have emperor_name
+    # filled with the current emperor
     messages = [{"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt.format(emperor_name=emperor)}]
 
+    # this is a custom id to keep track of each sample (IT MUST BE UNIQUE)
     custom_id = f"emperor={emperor}"
 
+    # this is the actual task to be performed. The response format is json_object, which means our prompt must contain
+    # json instructions (as shown above in user prompt)
     task = {
         "custom_id": custom_id,
         "method": "POST",
@@ -54,31 +59,32 @@ for emperor in roman_emperors:
             "messages": messages
         }
     }
-
     tasks.append(task)
 
 
+# Here, we are writing a local file to store the tasks. This is a jsonl file, newline delimited)
 with open("../data/input_batch.jsonl", 'w') as jfile:
     for task in tasks:
         jfile.write(json.dumps(task) + '\n')
 
-
-# establish client
+# establish OpenAI Client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# upload our batch file to OpenAI
 batch_file = client.files.create(
     file=open("../data/input_batch.jsonl", 'rb'),
     purpose='batch'
 )
-print(batch_file)
 
+# Run the batch using the completions endpoint
 batch_job = client.batches.create(
   input_file_id=batch_file.id,
   endpoint="/v1/chat/completions",
   completion_window="24h"
 )
 
-
+# loop until the status of our batch is co
+# mpleted
 complete = False
 while not complete:
     check = client.batches.retrieve(batch_job.id)
@@ -87,23 +93,24 @@ while not complete:
         complete = True
     time.sleep(1)
 print("Done processing batch.")
-print(batch_job)
+
 print("Writing data...")
-print(check)
+# Write the results to a local file, again, jsonl format
 result = client.files.content(check.output_file_id).content
 output_file_name = "../data/output_batch.jsonl"
 with open(output_file_name, 'wb') as file:
     file.write(result)
 
-
+# load the output file, extract each sample output, and and append to a list
 results = []
 with open(output_file_name, 'r') as file:
     for line in file:
+        # this converts the string into a Json object
         json_object = json.loads(line.strip())
         results.append(json_object)
 
-
+# Show the responses
 for item in results:
     print("Model's Response:")
-    print('\t', item.choices[0].message.content)
+    print('\t', item['response']['body']['choices'][0]['message']['content'])
 
