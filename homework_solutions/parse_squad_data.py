@@ -1,7 +1,7 @@
 import json
 
 
-def get_questions(json_data):
+def get_squad_questions(json_data):
     """
     Get a list of Tuples, where each Tuple contains a question and its potential answers
     :param json_data: Json object
@@ -14,19 +14,13 @@ def get_questions(json_data):
         for paragraph in paragraphs:
             qas = paragraph['qas']
             for qa in qas:
-                question = qa['question']
-                answers = [a for a in qa['answers']]
-                questions_answers.append((question, answers))
+                # skip questions that are impossible
+                if not qa['is_impossible']:
+                    question = qa['question']
+                    # collect all answers
+                    answers = [a for a in qa['answers']]
+                    # append to list of questions
+                    questions_answers.append((question, answers))
     return questions_answers
 
 
-# load the Json file
-with open("../data/squad_dev-v2.0.json", 'r') as jfile:
-    jdata = json.load(jfile)
-
-
-# Grab all questions and answers
-all_qas = get_questions(jdata)
-
-# Grab the first 5000
-qas_we_want = all_qas[:5000]

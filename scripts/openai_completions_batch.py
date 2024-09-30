@@ -101,7 +101,7 @@ output_file_name = "../data/output_batch.jsonl"
 with open(output_file_name, 'wb') as file:
     file.write(result)
 
-# load the output file, extract each sample output, and and append to a list
+# load the output file, extract each sample output, and append to a list
 results = []
 with open(output_file_name, 'r') as file:
     for line in file:
