@@ -24,3 +24,18 @@ def get_squad_questions(json_data):
     return questions_answers
 
 
+def get_squad_context(json_data):
+    """
+    Get a list of each context chunk from the dataset
+    :param json_data: Json object
+    :return: list[str]
+    """
+    all_context = []
+    data = json_data['data']
+    for item in data:
+        paragraphs = item['paragraphs']
+        for paragraph in paragraphs:
+            context = paragraph['context']
+            all_context.append(context)
+    return all_context
+
