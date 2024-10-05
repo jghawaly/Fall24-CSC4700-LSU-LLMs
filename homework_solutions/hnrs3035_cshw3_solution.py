@@ -11,7 +11,7 @@ from tqdm.auto import tqdm
 import argparse
 
 
-def format_answers_list(answers: list[str]) -> str:
+def format_answers_list(answers: list[dict]) -> str:
     """
     Generated a string version of a list of answers
     :param answers: list of answers, list[str]
@@ -19,7 +19,7 @@ def format_answers_list(answers: list[str]) -> str:
     """
     formatted_answers = ""
     for i in range(len(answers)):
-        formatted_answers += f"\t{i}. "
+        formatted_answers += f"\t{i}. {answers[i]['text']}"
     return formatted_answers
 
 
