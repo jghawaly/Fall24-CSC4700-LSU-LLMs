@@ -134,7 +134,7 @@ if __name__ == "__main__":
         # this list will hold the individual tasks for each question
         tasks = []
         i = 0
-        for q, _ in qas_we_want:
+        for q, _ in tqdm(qas_we_want):
             # retrieve context using embeddings
             retrieved_context = collection.query(query_texts=[q], n_results=args.k)
             formatted_context = "Chunk\n" + "\n\nChunk\n".join([doc[0] for doc in retrieved_context['documents']])
